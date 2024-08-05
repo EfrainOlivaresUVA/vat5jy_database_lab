@@ -1,0 +1,95 @@
+--SQL Code to answer Database Lab Part 2 Questions
+--1 Which courses are currently included (active) in the program? Include the course mnemonic and course name for each.
+SELECT course_id, course_name
+FROM vat5jy_courses_erd
+WHERE ACTIVE_COURSE_FLAG = 'TRUE'
+
+--2 Which courses were included in the program, but are no longer active? Include the course mnemonic and course name for each.
+SELECT course_id, course_name
+FROM vat5jy_courses_erd
+WHERE ACTIVE_COURSE_FLAG = 'FALSE'
+
+--3 Which instructors are not current employees?
+SELECT INSTRUCTOR_NAME
+FROM vat5jy_instructors_erd
+WHERE EMPLOYEE_ACTIVE_STATUS_FLAG = 'FALSE'
+
+--4 For each course (active and inactive), how many learning outcomes are there?
+SELECT course_id, COUNT(learning_outcome_id)
+FROM vat5jy_learning_outcomes_erd
+GROUP BY course_id
+
+--5 Are there any courses with no learning outcomes? If so, provide their mnemonics and names.
+SELECT c.course_id, c.course_name
+FROM vat5jy_courses_erd c
+LEFT JOIN vat5jy_learning_outcomes_erd l
+ON c.course_id = l.course_id
+WHERE l.course_id IS NULL;
+
+--6 Which courses include SQL as a learning outcome? Include the learning outcome descriptions, course mnemonics, and course names in your solution.
+SELECT l.course_id, c.course_name, l.learning_outcome
+FROM vat5jy_learning_outcomes_erd l
+INNER JOIN vat5jy_courses_erd c
+ON c.course_id = l.course_id
+WHERE l.learning_outcome like '%SQL%'
+
+--7 Who taught course ds5100 in Summer 2021?
+SELECT i.instructor_name
+FROM vat5jy_teaching_assignments_erd c
+INNER JOIN vat5jy_teaching_assignments_instructors_erd t
+ON c.assignment_id = t.assignment_id
+INNER JOIN vat5jy_instructors_erd i
+ON t.instructor_id = i.instructor_id
+WHERE c.course_id = 'ds5100' AND  c.TERM_ID = 'su21'
+
+--8 Which instructors taught in Fall 2021? Order their names alphabetically, making sure the names are unique.
+SELECT i.instructor_name
+FROM vat5jy_instructors_erd i
+INNER JOIN vat5jy_teaching_assignments_instructors_erd t
+ON t.instructor_id = i.instructor_id
+INNER JOIN vat5jy_teaching_assignments_erd c
+ON c.assignment_id = t.assignment_id
+WHERE c.TERM_ID = 'fall21'
+GROUP BY i.instructor_name
+ORDER BY i.instructor_name ASC
+
+--9 How many courses did each instructor teach in each term? Order your results by term and then instructor.
+SELECT c.term_ID, i.instructor_name, COUNT(c.course_id)
+FROM vat5jy_instructors_erd i
+INNER JOIN vat5jy_teaching_assignments_instructors_erd t
+ON t.instructor_id = i.instructor_id
+INNER JOIN vat5jy_teaching_assignments_erd c
+ON c.assignment_id = t.assignment_id
+GROUP BY c.term_ID, i.instructor_name
+ORDER BY c.term_ID, i.instructor_name
+
+--10a Which courses had more than one instructor for the same term? Provide the mnemonic and term for each. Note this occurs in courses with multiple sections.
+SELECT c.course_id, c.term_id
+FROM vat5jy_instructors_erd i
+INNER JOIN vat5jy_teaching_assignments_instructors_erd t
+ON t.instructor_id = i.instructor_id
+INNER JOIN vat5jy_teaching_assignments_erd c
+ON c.assignment_id = t.assignment_id
+GROUP BY c.course_id, c.term_id
+HAVING COUNT(t.instructor_ID) > 1
+
+--10b For courses with multiple sections, provide the term, course mnemonic, and instructor name for each. Hint: You can use your result from 10a in a subquery or WITH clause.
+WITH CTE AS (
+SELECT c.course_id, c.term_id
+FROM vat5jy_instructors_erd i
+INNER JOIN vat5jy_teaching_assignments_instructors_erd t
+ON t.instructor_id = i.instructor_id
+INNER JOIN vat5jy_teaching_assignments_erd c
+ON c.assignment_id = t.assignment_id
+GROUP BY c.course_id, c.term_id
+HAVING COUNT(t.instructor_ID) > 1
+)
+SELECT CTE.term_id, CTE.course_ID, i.instructor_name
+FROM CTE
+INNER JOIN vat5jy_teaching_assignments_erd c
+ON CTE.course_id = c.course_id AND CTE.term_id = c.term_id
+INNER JOIN vat5jy_teaching_assignments_instructors_erd t
+ON c.assignment_id = t.assignment_id
+INNER JOIN vat5jy_instructors_erd i
+ON t.instructor_id = i.instructor_id
+ORDER BY CTE.term_id, CTE.course_id, i.instructor_name
