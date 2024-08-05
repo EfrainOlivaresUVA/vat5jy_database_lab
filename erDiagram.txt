@@ -1,0 +1,42 @@
+erDiagram
+    COURSES {
+        varchar course_id PK
+        varchar course_name
+        varchar course_desc
+        boolean active_course_flag
+    }
+    
+    TERMS {
+        varchar term_id PK
+        varchar term_name
+    }
+    
+    INSTRUCTORS {
+        varchar instructor_id PK
+        varchar instructor_name
+        boolean employee_active_status_flag
+    }
+    
+    TEACHING_ASSIGNMENTS {
+        varchar assignment_id PK
+        varchar course_id FK
+        varchar term_id FK
+    }
+    
+    LEARNING_OUTCOMES {
+        varchar learning_outcome_id PK
+        varchar course_id FK
+        varchar learning_outcome
+        boolean active_learning_outcome_flag
+    }
+    
+    TEACHING_ASSIGNMENTS_INSTRUCTORS {
+        varchar assignment_id FK
+        varchar instructor_id FK
+    }
+    
+    COURSES ||--o{ TEACHING_ASSIGNMENTS : has
+    TERMS ||--o{ TEACHING_ASSIGNMENTS : includes
+    COURSES ||--o{ LEARNING_OUTCOMES : has
+    TEACHING_ASSIGNMENTS ||--o{ TEACHING_ASSIGNMENTS_INSTRUCTORS : has
+    INSTRUCTORS ||--o{ TEACHING_ASSIGNMENTS_INSTRUCTORS : assigned
